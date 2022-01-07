@@ -18,8 +18,8 @@ public class Main extends Application {
         stage = primaryStage;
         primaryStage.setResizable(false); // user can't change window size
         FXMLLoader fxmlLoader = new FXMLLoader(ViewResolver.getView("login-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 750, 400);
-        primaryStage.setTitle("[Social Network to be Named]");
+        Scene scene = new Scene(fxmlLoader.load());
+        primaryStage.setTitle("[Owlett]");
         primaryStage.setScene(scene);
         primaryStage.show();
     }

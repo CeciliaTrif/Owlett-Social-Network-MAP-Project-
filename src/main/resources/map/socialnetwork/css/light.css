@@ -1,0 +1,16 @@
+.button {
+    -fx-text-fill: #969696;
+    -fx-font-family: "Arial";
+    -fx-font-size: 14;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 5;
+}
+
+.text-field {
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 5;
+}

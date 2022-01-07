@@ -14,8 +14,6 @@ import map.socialnetwork.util.PasswordUtil;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class LogInController {
 
@@ -43,8 +41,8 @@ public class LogInController {
 
         if(!username.getText().isBlank() && !password.getText().isBlank()) {
             User user = userDatabaseRepository.findOneByUsername(username.getText());
-            Long id = userDatabaseRepository.findOneByUsername(username.getText()).getId();
             if(user != null && PasswordUtil.authenticate(password.getText().toCharArray(), user.getPassword())) {
+                Long id = userDatabaseRepository.findOneByUsername(username.getText()).getId();
                 Main.switchSceneWithParameters("main-view.fxml", Collections.singletonMap("userId", id));
             } else {
                 wrongLogIn.setText("Incorrect username or password!");

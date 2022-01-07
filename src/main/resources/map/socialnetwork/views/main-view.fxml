@@ -2,48 +2,102 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="map.socialnetwork.controller.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="map.socialnetwork.controller.MainController">
    <center>
-      <AnchorPane prefHeight="324.0" prefWidth="453.0" style="-fx-background-color: #152238;" BorderPane.alignment="CENTER">
-         <Button fx:id="logOutButton" layoutX="46.0" layoutY="303.0" mnemonicParsing="false" onAction="#userLogOut" prefWidth="128.0" text="Log Out">
-            <font>
-               <Font name="Lucida Console" size="12.0" />
-            </font>
-         </Button>
-         <Button fx:id="showFriendsButton" layoutX="46.0" layoutY="79.0" mnemonicParsing="false" onAction="#showFriends" prefHeight="25.0" prefWidth="128.0" text="Friends">
-            <font>
-               <Font name="Lucida Console" size="12.0" />
-            </font>
-         </Button>
-         <Button fx:id="showFriendRequestsButton" layoutX="46.0" layoutY="110.0" mnemonicParsing="false" onAction="#showFriendRequests" prefHeight="22.0" prefWidth="128.0" text="Friend Requests" textAlignment="CENTER">
-            <font>
-               <Font name="Lucida Console" size="12.0" />
-            </font></Button>
-         <TableView fx:id="tableView" layoutX="231.0" layoutY="62.0" prefHeight="241.0" prefWidth="254.0" visible="false">
-
-         </TableView>
-         <Button fx:id="addFriendsButton" layoutX="46.0" layoutY="51.0" mnemonicParsing="false" onAction="#sendRequest" prefWidth="128.0" text="Add friends">
-            <font>
-               <Font name="Lucida Console" size="12.0" />
-            </font>
-         </Button>
-         <Label fx:id="sendRequestMessage" layoutX="244.0" layoutY="62.0" textFill="WHITE" />
+      <AnchorPane prefHeight="600.0" prefWidth="208.0" style="-fx-background-color: #ffffff;" BorderPane.alignment="CENTER">
+         <AnchorPane prefHeight="600.0" prefWidth="212.0">
+            <ImageView fitHeight="600.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
+               <Image url="@../pictures/main_view_bg.png" />
+            </ImageView>
+            <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="31.0" layoutY="63.0" pickOnBounds="true"
+                       preserveRatio="true">
+               <Image url="@../pictures/owlett_logo_v1.png"/>
+            </ImageView>
+            <Button fx:id="addFriendsButton" layoutX="26.0" layoutY="378.0" mnemonicParsing="false" onAction="#sendRequest" prefHeight="40.0" prefWidth="180.0" stylesheets="@../css/light.css" text="Add friends" visible="false">
+               <font>
+                  <Font name="Lucida Console" size="12.0" />
+               </font>
+            </Button>
+            <Button fx:id="sentRequestsButton" layoutX="26.0" layoutY="481.0" mnemonicParsing="false" onAction="#showSentRequests" prefHeight="40.0" prefWidth="180.0" stylesheets="@../css/light.css" text="Sent Requests" visible="false" />
+            <Button fx:id="showFriendRequestsButton" layoutX="26.0" layoutY="428.0" mnemonicParsing="false" onAction="#showFriendRequests" prefHeight="40.0" prefWidth="180.0" stylesheets="@../css/light.css" text="Friend Requests" textAlignment="CENTER" visible="false">
+               <font>
+                  <Font name="Lucida Console" size="12.0" />
+               </font>
+            </Button>
+            <Button fx:id="logOutButton" layoutX="54.0" layoutY="532.0" mnemonicParsing="false" onAction="#userLogOut" prefWidth="128.0" stylesheets="@../css/mid.css" text="Log Out">
+               <font>
+                  <Font name="Lucida Console" size="12.0" />
+               </font>
+            </Button>
+            <Label fx:id="loggedInAsUsernameLabel" alignment="CENTER" layoutX="18.0" layoutY="260.0" prefHeight="59.0" prefWidth="200.0" textAlignment="CENTER" textFill="#394f71">
+               <font>
+                  <Font name="Lucida Console" size="18.0" />
+               </font>
+            </Label>
+         </AnchorPane>
+         <Label fx:id="sendRequestMessage" layoutX="244.0" layoutY="62.0" />
          <TextField fx:id="friendUsername" layoutX="301.0" layoutY="149.0" promptText="Username" visible="false" />
-         <Button fx:id="addButton" layoutX="357.0" layoutY="187.0" mnemonicParsing="false" onAction="#addFriends" text="Add" visible="false" />
-         <Label fx:id="logInStatus" layoutX="620.0" layoutY="358.0" textFill="WHITE" />
-         <Button fx:id="deleteButton" layoutX="275.0" layoutY="323.0" mnemonicParsing="false" onAction="#handleDelete" text="Delete" visible="false" />
-         <Button fx:id="acceptButton" layoutX="332.0" layoutY="325.0" mnemonicParsing="false" onAction="#handleAccept" text="Accept" visible="false" />
-         <Button fx:id="openChatButton" layoutX="46.0" layoutY="138.0" mnemonicParsing="false" onAction="#handleChat" prefHeight="22.0" prefWidth="128.0" text="Chat">
+         <AnchorPane layoutX="233.0" prefHeight="600.0" prefWidth="490.0" style="-fx-background-color: #ffffff;">
+            <Button fx:id="acceptButton" layoutX="122.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleAccept" stylesheets="@../css/dark.css" text="Accept" visible="false" />
+            <TableView fx:id="tableView" layoutX="29.0" layoutY="26.0" prefHeight="267.0" prefWidth="339.0" visible="false">
+
+            </TableView>
+            <Button fx:id="addButton" layoutX="29.0" layoutY="309.0" mnemonicParsing="false" onAction="#addFriends" stylesheets="@../css/dark.css" text="Add" visible="false" />
+            <Button fx:id="deleteButton" layoutX="67.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleDelete" prefHeight="25.0" prefWidth="55.0" stylesheets="@../css/dark.css" text="Delete" visible="false" />
+            <Button fx:id="chatButton" layoutX="171.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleChat" prefHeight="25.0" prefWidth="55.0" stylesheets="@../css/dark.css" text="Chat" visible="false">
+               <font>
+                  <Font name="Lucida Console" size="12.0" />
+               </font>
+            </Button>
+            <Button fx:id="cancelRequestButton" layoutX="226.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleCancelRequest" stylesheets="@../css/dark.css" text="Cancel Request" visible="false" />
+            <ScrollPane layoutX="25.0" layoutY="336.0" prefHeight="213.0" prefWidth="371.0">
+               <content>
+                  <TextArea prefHeight="211.0" prefWidth="369.0" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." wrapText="true">
+                     <font>
+                        <Font size="21.0" />
+                     </font>
+                  </TextArea>
+               </content>
+            </ScrollPane>
+         </AnchorPane>
+      </AnchorPane>
+   </center>
+   <left>
+      <AnchorPane prefHeight="600.0" prefWidth="58.0" style="-fx-background-color: #383659;" BorderPane.alignment="CENTER">
+         <ImageView fitHeight="40.0" fitWidth="40.0" layoutX="9.0" layoutY="249.0" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../pictures/profile.png" />
+         </ImageView>
+         <Button fx:id="showProfileButton" layoutX="10.0" layoutY="249.0" mnemonicParsing="false" onAction="#showProfile" prefHeight="40.0" prefWidth="40.0" stylesheets="@../css/transparent-buttons.css">
+            <font>
+               <Font name="Lucida Console" size="12.0" />
+            </font>
+         </Button>
+         <ImageView fitHeight="40.0" fitWidth="40.0" layoutX="9.0" layoutY="300.0" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../pictures/friends.png" />
+         </ImageView>
+         <Button fx:id="showFriendsButton" layoutX="9.0" layoutY="300.0" mnemonicParsing="false" onAction="#showFriends" prefHeight="40.0" prefWidth="40.0" stylesheets="@../css/transparent-buttons.css">
+            <font>
+               <Font name="Lucida Console" size="12.0" />
+            </font>
+         </Button>
+         <ImageView fitHeight="40.0" fitWidth="40.0" layoutX="9.0" layoutY="350.0" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../pictures/messages2.png" />
+         </ImageView>
+         <Button fx:id="showConversationsButton" layoutX="10.0" layoutY="350.0" mnemonicParsing="false" onAction="#showConversations" prefHeight="40.0" prefWidth="40.0" stylesheets="@../css/transparent-buttons.css">
             <font>
                <Font name="Lucida Console" size="12.0" />
             </font>
          </Button>
       </AnchorPane>
-   </center>
+   </left>
 </BorderPane>

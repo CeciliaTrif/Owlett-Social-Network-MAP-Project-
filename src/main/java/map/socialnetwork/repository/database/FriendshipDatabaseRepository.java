@@ -29,7 +29,7 @@ public class FriendshipDatabaseRepository implements Repository<Friendship, Long
 
     private static final String FIND_BY_USERS_ID_QUERY = "SELECT * " +
             "FROM friendships " +
-            "WHERE user_id_1=? AND user_id_2=?";
+            "WHERE (user_id_1=? AND user_id_2=?) OR (user_id_1=? AND user_id_2=?)";
 
     private static final String FIND_ID = "SELECT id " +
             "FROM friendships " +
@@ -49,6 +49,10 @@ public class FriendshipDatabaseRepository implements Repository<Friendship, Long
 
     private static final String GENERATE_ID_QUERY = "SELECT MAX(id) + 1 AS generated_id " +
             "FROM friendships";
+
+    private static final String SELECT_ALL_BY_USER_ID_QUERY = "SELECT * " +
+            "FROM friendships " +
+            "WHERE status= 'accepted' AND (user_id_1=? OR user_id_2=?)";
 
     private final Validator<Friendship> friendshipValidator;
     private final Repository<User, Long> userRepository;
@@ -87,6 +91,8 @@ public class FriendshipDatabaseRepository implements Repository<Friendship, Long
             PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_USERS_ID_QUERY);
             preparedStatement.setLong(1, user_id_1);
             preparedStatement.setLong(2, user_id_2);
+            preparedStatement.setLong(3, user_id_2);
+            preparedStatement.setLong(4, user_id_1);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 return extractFriendshipFromResultSet(resultSet);
@@ -121,26 +127,18 @@ public class FriendshipDatabaseRepository implements Repository<Friendship, Long
 
     @Override
     public Collection<Friendship> getAll() {
-        List<Friendship> friendshipList = new ArrayList<>();
-        try {
-            Connection connection = ConnectionFactory.getDatabaseConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_QUERY);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                friendshipList.add(extractFriendshipFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return friendshipList;
+        return getFriendships(SELECT_ALL_QUERY);
     }
 
     public Collection<Friendship> getRequests() {
+        return getFriendships(SELECT_REQUESTS_QUERY);
+    }
+
+    private Collection<Friendship> getFriendships(String selectRequestsQuery) {
         List<Friendship> friendshipList = new ArrayList<>();
         try {
             Connection connection = ConnectionFactory.getDatabaseConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_REQUESTS_QUERY);
+            PreparedStatement preparedStatement = connection.prepareStatement(selectRequestsQuery);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 friendshipList.add(extractFriendshipFromResultSet(resultSet));
@@ -213,36 +211,39 @@ public class FriendshipDatabaseRepository implements Repository<Friendship, Long
 
     @Override
     public Friendship update(Friendship entity) {
-        Friendship friendship1 = findOneByUser(entity.getUserID2(), entity.getUserID1());
-        Friendship friendship2 = findOneByUser(entity.getUserID1(), entity.getUserID2());
-        if (friendship1 != null) {
-            try {
-                Connection connection = ConnectionFactory.getDatabaseConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_QUERY);
-                preparedStatement.setLong(1, entity.getUserID1());
-                preparedStatement.setLong(2, entity.getUserID2());
-                preparedStatement.setTimestamp(3, entity.getFriendshipStartDate());
-                preparedStatement.setString(4, "accepted");
-                preparedStatement.setLong(5, friendship1.getId());
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } else if (friendship2 != null){
-            try {
-                Connection connection = ConnectionFactory.getDatabaseConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_QUERY);
-                preparedStatement.setLong(1, entity.getUserID1());
-                preparedStatement.setLong(2, entity.getUserID2());
-                preparedStatement.setTimestamp(3, entity.getFriendshipStartDate());
-                preparedStatement.setString(4, "accepted");
-                preparedStatement.setLong(5, friendship2.getId());
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        Friendship friendship = findOneByUser(entity.getUserID2(), entity.getUserID1());
+        try {
+            Connection connection = ConnectionFactory.getDatabaseConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_QUERY);
+            preparedStatement.setLong(1, entity.getUserID1());
+            preparedStatement.setLong(2, entity.getUserID2());
+            preparedStatement.setTimestamp(3, entity.getFriendshipStartDate());
+            preparedStatement.setString(4, "accepted");
+            preparedStatement.setLong(5, friendship.getId());
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
         return entity;
+    }
+
+    public List<Friendship> getAllByUserId(Long userId) {
+        Connection connection = ConnectionFactory.getDatabaseConnection();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_BY_USER_ID_QUERY);
+            preparedStatement.setLong(1, userId);
+            preparedStatement.setLong(2, userId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<Friendship> friendshipList = new ArrayList<>();
+            while (resultSet.next()) {
+                friendshipList.add(extractFriendshipFromResultSet(resultSet));
+            }
+            return friendshipList;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override

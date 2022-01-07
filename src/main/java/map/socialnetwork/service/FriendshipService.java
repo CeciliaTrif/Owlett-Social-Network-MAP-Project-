@@ -29,6 +29,11 @@ public class FriendshipService extends map.socialnetwork.service.BaseService<Fri
                 .filter(friendship -> friendship.getUserID1().equals(user_1) && friendship.getUserID2().equals(user_2)).toList();
     }
 
+    public List<Friendship> getRequestsFrom(Long user_1) {
+        return getRequests().stream()
+                .filter(friendship -> friendship.getUserID1().equals(user_1)).toList();
+    }
+
 
     public List<Friendship> getRequestsByID(Long user_id) {
         return getRequests().stream()
@@ -44,8 +49,16 @@ public class FriendshipService extends map.socialnetwork.service.BaseService<Fri
         return friendship;
     }
 
+    public List<Friendship> getAllByUserId(Long userId) {
+        return getFriendshipRepository().getAllByUserId(userId);
+    }
+
     private Collection<Friendship> getRequests() {
         return ((FriendshipDatabaseRepository)getRepository()).getRequests();
+    }
+
+    private FriendshipDatabaseRepository getFriendshipRepository() {
+        return (FriendshipDatabaseRepository) getRepository();
     }
 
 }
