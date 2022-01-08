@@ -50,8 +50,6 @@ public class MainController implements InitializableController {
     @FXML
     public Button addFriendsButton;
     @FXML
-    public Button addButton;
-    @FXML
     public Label loggedInAsUsernameLabel;
     @FXML
     public Button acceptButton;
@@ -66,15 +64,19 @@ public class MainController implements InitializableController {
     @FXML
     public Button showConversationsButton;
     @FXML
+    public Label loggedInAsName;
+    @FXML
+    public Label loggedInAsLastName;
+    @FXML
+    public Label sendRequestNotifyMessageLabel;
+    @FXML
+    public Button sendFriendRequestButton;
+    @FXML
     private Button logOutButton;
     @FXML
     private TableView<UserTableItemWrapper> tableView;
     @FXML
     public Button deleteButton;
-    @FXML
-    public TextField friendUsername;
-    @FXML
-    public Label sendRequestMessage;
     private Long userId;
     private final UserDatabaseRepository userDatabaseRepository = new UserDatabaseRepository(new UserValidator());
     private final FriendshipDatabaseRepository friendshipDatabaseRepository = new FriendshipDatabaseRepository(new FriendshipValidator(), userDatabaseRepository);
@@ -83,6 +85,7 @@ public class MainController implements InitializableController {
     public void initializeData(Map<String, Object> parameters) {
         userId = (Long) parameters.get("userId");
         loggedInAsUsernameLabel.setText("Logged in as:\n" + userDatabaseRepository.findOne(userId).getUsername());
+        loggedInAsName.setText(userDatabaseRepository.findOne(userId).getFirstName() + " " + userDatabaseRepository.findOne(userId).getLastName());
         tableView.setItems(TABLE_ITEMS);
     }
 
@@ -90,47 +93,55 @@ public class MainController implements InitializableController {
         Main.switchScene("login-view.fxml");
     }
 
-    public void sendRequest(ActionEvent event) throws IOException {
-        resetVisibility();
-        sendRequestMessage.setVisible(true);
-        sendRequestMessage.setText("Enter the username of the person you want to connect with:");
-        addButton.setVisible(true);
-        friendUsername.setVisible(true);
-    }
-
-    public void addFriends(ActionEvent event) {
-        if (checkUsername()) {
-            User friend = userDatabaseRepository.findOneByUsername(friendUsername.getText());
-            LocalDateTime now = LocalDateTime.now();
-            Timestamp date = Timestamp.valueOf(now);
-
-            Friendship friendship = new Friendship(userId, friend.getId(), date);
-            assert friendshipService != null;
-            friendship.setId(friendshipDatabaseRepository.generateNextID());
-            friendshipService.addToRepo(friendship);
-            sendRequestMessage.setText("Friend request sent!");
-        }
-        addButton.setVisible(false);
-        friendUsername.setVisible(false);
-    }
-
-    private boolean checkUsername() throws ValidationException {
-        User friend = userDatabaseRepository.findOneByUsername(friendUsername.getText());
-
-        if (userDatabaseRepository.getUsername(friendUsername.getText()) == null) {
-            sendRequestMessage.setText("User does not exist!");
+    private boolean checkExistingFriendRequest(String newFriend) throws ValidationException {
+        User friend = userDatabaseRepository.findOneByUsername(newFriend);
+        if (friendshipDatabaseRepository.findOneByUser(userId, friend.getId()) != null) {
+            sendRequestNotifyMessageLabel.setText("Friend request already sent!");
             return false;
-        } else if (friendshipDatabaseRepository.findOneByUser(userId, friend.getId()) != null) {
-            sendRequestMessage.setText("A request between the users already pending!");
+        }
+        if (userId.equals(friend.getId())) {
+            sendRequestNotifyMessageLabel.setText("Can't send friend request to your own self!");
             return false;
         }
         return true;
     }
 
+    public void showProfile(ActionEvent event) {
+        resetVisibility();
+        loggedInAsUsernameLabel.setVisible(true);
+        loggedInAsName.setVisible(true);
+        logOutButton.setVisible(true);
+    }
+
+    public void showConversations(ActionEvent event) {
+        resetVisibility();
+    }
+
+    public void showUsers(ActionEvent event) throws IOException {
+        resetVisibility();
+        addFriendsButton.setVisible(true);
+        showFriendRequestsButton.setVisible(true);
+        sentRequestsButton.setVisible(true);
+        sendFriendRequestButton.setVisible(true);
+        sendRequestNotifyMessageLabel.setVisible(true);
+
+        Map<String, String> columnsDescription = new LinkedHashMap<>();
+        //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
+        columnsDescription.put("Username", "userName");
+        columnsDescription.put("First Name", "firstName");
+        columnsDescription.put("Last Name", "lastName");
+
+        buildTableColumns(columnsDescription);
+
+        setUsersAsTableItems();
+    }
+
     public void showFriends(ActionEvent event) throws IOException {
         resetVisibility();
+        addFriendsButton.setVisible(true);
         deleteButton.setVisible(true);
-        chatButton.setVisible(true);
+        showFriendRequestsButton.setVisible(true);
+        sentRequestsButton.setVisible(true);
 
         Map<String, String> columnsDescription = new LinkedHashMap<>();
         //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
@@ -144,11 +155,14 @@ public class MainController implements InitializableController {
 
     public void showFriendRequests(ActionEvent event) {
         resetVisibility();
+        addFriendsButton.setVisible(true);
+        sentRequestsButton.setVisible(true);
+        showFriendRequestsButton.setVisible(true);
         deleteButton.setVisible(true);
         acceptButton.setVisible(true);
         Map<String, String> columnsDescription = new LinkedHashMap<>();
         //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
-        columnsDescription.put("Username", "userName");
+        columnsDescription.put("From", "userName");
         columnsDescription.put("Date", "date");
         columnsDescription.put("Status", "status");
 
@@ -159,6 +173,9 @@ public class MainController implements InitializableController {
 
     public void showSentRequests(ActionEvent event) {
         resetVisibility();
+        addFriendsButton.setVisible(true);
+        showFriendRequestsButton.setVisible(true);
+        sentRequestsButton.setVisible(true);
         cancelRequestButton.setVisible(true);
         Map<String, String> columnsDescription = new LinkedHashMap<>();
         //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
@@ -169,6 +186,20 @@ public class MainController implements InitializableController {
         buildTableColumns(columnsDescription);
 
         setSentRequestAsTableItems();
+    }
+
+    public void sendFriendRequest(ActionEvent event) {
+        UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
+        User newFriend = userDatabaseRepository.findOneByUsername(selectedItem.getUserName());
+        if (checkExistingFriendRequest(newFriend.getUsername())) {
+            LocalDateTime now = LocalDateTime.now();
+            Timestamp date = Timestamp.valueOf(now);
+            Friendship newFriendRequest = new Friendship(userId, newFriend.getId(), date);
+            assert friendshipService != null;
+            newFriendRequest.setId(friendshipDatabaseRepository.generateNextID());
+            friendshipService.addToRepo(newFriendRequest);
+            sendRequestNotifyMessageLabel.setText("Friend request sent!");
+        }
     }
 
     public void handleDelete(ActionEvent event) {
@@ -213,6 +244,22 @@ public class MainController implements InitializableController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void setUsersAsTableItems() {
+        assert userService != null;
+        List<UserTableItemWrapper> items = userService.getAll()
+                .stream()
+                .map(user -> {
+                    UserTableItemWrapper userTableItemWrapper = new UserTableItemWrapper();
+                    userTableItemWrapper.setUserName(user.getUsername());
+                    userTableItemWrapper.setFirstName(user.getFirstName());
+                    userTableItemWrapper.setLastName(user.getLastName());
+                    return userTableItemWrapper;
+                })
+                .collect(Collectors.toList());
+
+        TABLE_ITEMS.setAll(items);
     }
 
     private void setFriendRequestAsTableItems() {
@@ -264,14 +311,19 @@ public class MainController implements InitializableController {
     }
 
     private void resetVisibility() {
+        sendFriendRequestButton.setVisible(false);
+        sendRequestNotifyMessageLabel.setVisible(false);
+        addFriendsButton.setVisible(false);
+        loggedInAsName.setVisible(false);
+        showFriendRequestsButton.setVisible(false);
+        sentRequestsButton.setVisible(false);
+        logOutButton.setVisible(false);
+        loggedInAsUsernameLabel.setVisible(false);
         cancelRequestButton.setVisible(false);
         chatButton.setVisible(false);
         acceptButton.setVisible(false);
-        addButton.setVisible(false);
         deleteButton.setVisible(false);
         tableView.setVisible(false);
-        sendRequestMessage.setVisible(false);
-        friendUsername.setVisible(false);
     }
 
     private void buildTableColumns(Map<String, String> columnsDescription) {
@@ -292,9 +344,5 @@ public class MainController implements InitializableController {
         }
     }
 
-    public void showProfile(ActionEvent event) {
-    }
 
-    public void showConversations(ActionEvent event) {
-    }
 }
