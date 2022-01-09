@@ -2,11 +2,21 @@ package map.socialnetwork.views.wrapper;
 
 public class UserTableItemWrapper {
 
+    private Long id;
     private String userName;
     private String status;
     private String date;
     private String firstName;
     private String lastName;
+
+    public Long getId() {
+        return id;
+    }
+
+    public UserTableItemWrapper setId(Long id) {
+        this.id = id;
+        return this;
+    }
 
     public String getUserName() {
         return userName;

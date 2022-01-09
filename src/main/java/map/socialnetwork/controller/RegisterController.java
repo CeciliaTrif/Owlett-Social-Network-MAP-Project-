@@ -40,8 +40,14 @@ public class RegisterController {
     private void checkSignUp() throws ValidationException, IOException {
         if (!firstName.getText().matches("[a-zA-Z]+") || !lastName.getText().matches("[a-zA-Z]+")) {
             signUpMessage.setText("First and last name can only contain letters!");
-        } else if(userDatabaseRepository.getUsername(newUsername.getText()) != null) {
+        } else if (userDatabaseRepository.getUsername(newUsername.getText()) != null) {
             signUpMessage.setText("Username already taken!");
+        } else if (newPassword.getText().isBlank() && newUsername.getText().isBlank()) {
+            signUpMessage.setText("Please enter username and password!");
+        } else if (newUsername.getText().isBlank()) {
+            signUpMessage.setText("Please enter a username!");
+        } else if (newPassword.getText().isBlank()) {
+            signUpMessage.setText("Please enter a password!");
         } else {
             User user = new User(newUsername.getText(), newPassword.getText(), firstName.getText(), lastName.getText());
             user.setId(userDatabaseRepository.generateNextID());

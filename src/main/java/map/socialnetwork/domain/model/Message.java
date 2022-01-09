@@ -18,7 +18,12 @@ public class Message extends Entity<Long> {
         this.replyMessageID = getReplyMessageID;
     }
 
-
+    public Message(Long senderID, Long receiverID, LocalDateTime messageTime, String message) {
+        this.senderID = senderID;
+        this.receiverID = receiverID;
+        this.messageTime = messageTime;
+        this.message = message;
+    }
 
     public Long getSenderID() {
         return senderID;

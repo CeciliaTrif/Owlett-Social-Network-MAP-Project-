@@ -36,7 +36,7 @@ public class MessageDatabaseRepository implements Repository<Message, Long> {
             "VALUES(?, ?, ?, ?, ?)";
 
     private static final String UPDATE_QUERY = "UPDATE messages " +
-            "SET sender_id=?, sender_id=?, receiver_id=?, message_time=?, message= ? " +
+            "SET sender_id=?, receiver_id=?, message_time=?, message= ?, reply_message_id=?" +
             "WHERE id=?";
 
     @Override
@@ -125,22 +125,23 @@ public class MessageDatabaseRepository implements Repository<Message, Long> {
 
     @Override
     public Message save(Message entity) {
-        Message message = findOneByUser(entity.getSenderID(), entity.getReceiverID());
         messageValidator.validate(entity);
-        if (message == null) {
-            try {
-                Connection connection = ConnectionFactory.getDatabaseConnection();
-                PreparedStatement preparedStatement;
-                preparedStatement = connection.prepareStatement(SAVE_QUERY);
-                preparedStatement.setLong(1, entity.getSenderID());
-                preparedStatement.setLong(2, entity.getReceiverID());
-                preparedStatement.setTimestamp(3, Timestamp.valueOf(entity.getMessageTime()));
-                preparedStatement.setString(4, entity.getMessage());
+        try {
+            Connection connection = ConnectionFactory.getDatabaseConnection();
+            PreparedStatement preparedStatement;
+            preparedStatement = connection.prepareStatement(SAVE_QUERY);
+            preparedStatement.setLong(1, entity.getSenderID());
+            preparedStatement.setLong(2, entity.getReceiverID());
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(entity.getMessageTime()));
+            preparedStatement.setString(4, entity.getMessage());
+            if(entity.getReplyMessageID() != null) {
                 preparedStatement.setLong(5, entity.getReplyMessageID());
-                preparedStatement.execute();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
+            } else {
+                preparedStatement.setNull(5, Types.INTEGER);
             }
+            preparedStatement.execute();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
         return null;
     }
@@ -166,10 +167,12 @@ public class MessageDatabaseRepository implements Repository<Message, Long> {
             try {
                 Connection connection = ConnectionFactory.getDatabaseConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_QUERY);
-                preparedStatement.setLong(1, entity.getId());
-                preparedStatement.setLong(2, entity.getSenderID());
-                preparedStatement.setLong(3, entity.getReceiverID());
+                preparedStatement.setLong(1, entity.getSenderID());
+                preparedStatement.setLong(2, entity.getReceiverID());
+                preparedStatement.setTimestamp(3, Timestamp.valueOf(entity.getMessageTime()));
                 preparedStatement.setString(4, entity.getMessage());
+                preparedStatement.setLong(5, entity.getReplyMessageID());
+                preparedStatement.setLong(6, entity.getId());
                 preparedStatement.execute();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -184,10 +187,12 @@ public class MessageDatabaseRepository implements Repository<Message, Long> {
     }
 
     private Message extractMessageFromResultSet(ResultSet resultSet) throws SQLException {
-        return new Message(resultSet.getLong("sender_id"),
+                Message message = new Message(resultSet.getLong("sender_id"),
                 resultSet.getLong("receiver_id"),
                 resultSet.getTimestamp("message_time").toLocalDateTime(),
                 resultSet.getString("message"),
                 resultSet.getLong("reply_message_id"));
+                message.setId(resultSet.getLong("id"));
+        return message;
     }
 }
