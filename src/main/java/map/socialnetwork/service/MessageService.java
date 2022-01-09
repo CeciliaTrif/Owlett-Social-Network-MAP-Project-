@@ -39,9 +39,16 @@ public class MessageService extends BaseService<Message, Long> {
             message = getLastMessageByParticipantIds(message.getSenderID(), message.getReceiverID());
             lastMessage.setReplyMessageID(message.getId());
             update(lastMessage);
+        } else {
+            add(message);
         }
     }
 
 
-
+    public List<Message> getMessagesByReceiverId(Long id) {
+        return getMessages().stream()
+                .filter(message -> message.getReceiverID().equals(id))
+                .sorted(Comparator.comparing(Message::getMessageTime))
+                .toList();
+    }
 }

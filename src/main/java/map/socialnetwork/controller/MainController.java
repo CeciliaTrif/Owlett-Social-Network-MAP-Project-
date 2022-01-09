@@ -4,15 +4,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import map.socialnetwork.Main;
 import map.socialnetwork.domain.model.Friendship;
 import map.socialnetwork.domain.model.Message;
@@ -27,7 +23,6 @@ import map.socialnetwork.service.GroupChatService;
 import map.socialnetwork.service.MessageService;
 import map.socialnetwork.service.UserService;
 import map.socialnetwork.util.Container;
-import map.socialnetwork.views.ViewResolver;
 import map.socialnetwork.views.wrapper.UserTableItemWrapper;
 
 import java.io.IOException;
@@ -99,6 +94,10 @@ public class MainController implements InitializableController {
     @FXML
     public Button declineButton;
     @FXML
+    public Button openGroupConversationButton;
+    @FXML
+    public ImageView welcomeImage;
+    @FXML
     private Button logOutButton;
     @FXML
     private TableView<UserTableItemWrapper> tableView;
@@ -116,7 +115,7 @@ public class MainController implements InitializableController {
     public void initializeData(Map<String, Object> parameters) {
         userId = (Long) parameters.get("userId");
         loggedInAsUsernameLabel.setText("Logged in as:\n" + userDatabaseRepository.findOne(userId).getUsername());
-        loggedInAsName.setText(userDatabaseRepository.findOne(userId).getFirstName() + "\n" + userDatabaseRepository.findOne(userId).getLastName());
+        loggedInAsName.setText(userDatabaseRepository.findOne(userId).getFirstName() + " " + userDatabaseRepository.findOne(userId).getLastName());
         tableView.setItems(TABLE_ITEMS);
     }
 
@@ -128,10 +127,12 @@ public class MainController implements InitializableController {
         User friend = userDatabaseRepository.findOneByUsername(newFriend);
         if (friendshipDatabaseRepository.findOneByUser(userId, friend.getId()) != null) {
             sendRequestNotifyMessageLabel.setText("A friendship request already exists between you and " + friend.getFirstName() + "!");
+            sendRequestNotifyMessageLabel.setVisible(true);
             return false;
         }
         if (userId.equals(friend.getId())) {
             sendRequestNotifyMessageLabel.setText("Can't send friend request to your own self!");
+            sendRequestNotifyMessageLabel.setVisible(true);
             return false;
         }
         return true;
@@ -142,6 +143,7 @@ public class MainController implements InitializableController {
         loggedInAsUsernameLabel.setVisible(true);
         loggedInAsName.setVisible(true);
         logOutButton.setVisible(true);
+        welcomeImage.setVisible(true);
     }
 
     public void showChats(ActionEvent event) {
@@ -172,31 +174,36 @@ public class MainController implements InitializableController {
 
     public void openConversation(ActionEvent event) {
         UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-        tableView.setDisable(true);
-        assert messageService != null;
-        List<Message> messages = messageService.getMessagesByParticipantIds(selectedItem.getId(), userId);
-        assert userService != null;
-        User selectedUser = userService.findById(selectedItem.getId());
-        User loggedInUser = userService.findById(userId);
-        chatTextArea.getChildren().clear();
-        for(Message message : messages) {
-            Label currentLabel;
-            if(message.getSenderID().equals(selectedUser.getId())) {
-                currentLabel = new Label(selectedUser.getUsername() + ": " + message.getMessage() + "\n");
-                currentLabel.setAlignment(Pos.CENTER_LEFT);
+        if (selectedItem != null) {
+            assert messageService != null;
+            List<Message> messages = messageService.getMessagesByParticipantIds(selectedItem.getId(), userId);
+            assert userService != null;
+            User selectedUser = userService.findById(selectedItem.getId());
+            User loggedInUser = userService.findById(userId);
+            chatTextArea.getChildren().clear();
+            for (Message message : messages) {
+                Label currentLabel;
+                if (message.getSenderID().equals(selectedUser.getId())) {
+                    currentLabel = new Label(selectedUser.getUsername() + ": " + message.getMessage() + "\n");
+                    currentLabel.setAlignment(Pos.CENTER_LEFT);
 
-            } else {
-                currentLabel = new Label(loggedInUser.getUsername() + ": " + message.getMessage() + "\n");
-                currentLabel.setAlignment(Pos.CENTER_RIGHT);
+                } else {
+                    currentLabel = new Label(loggedInUser.getUsername() + ": " + message.getMessage() + "\n");
+                    currentLabel.setAlignment(Pos.CENTER_RIGHT);
+                }
+                currentLabel.setStyle("-fx-pref-width:424px; ");
+                currentLabel.setWrapText(true);
+                chatTextArea.getChildren().add(currentLabel);
             }
-            currentLabel.setStyle("-fx-pref-width:424px; ");
-            currentLabel.setWrapText(true);
-            chatTextArea.getChildren().add(currentLabel);
+            tableView.setDisable(true);
+            chatScrollPane.setVisible(true);
+            chatTextArea.setVisible(true);
+            sendMessageText.setVisible(true);
+            sendMessageButton.setVisible(true);
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please make a selection!");
+            sendRequestNotifyMessageLabel.setVisible(true);
         }
-        chatScrollPane.setVisible(true);
-        chatTextArea.setVisible(true);
-        sendMessageText.setVisible(true);
-        sendMessageButton.setVisible(true);
 
     }
 
@@ -210,11 +217,15 @@ public class MainController implements InitializableController {
 
     public void sendMessage(ActionEvent event) {
         UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-        System.out.println(selectedItem.getId());
         Message message = new Message(userId, selectedItem.getId(), LocalDateTime.now(), sendMessageText.getText());
         assert messageService != null;
         messageService.sendMessage(message);
-        openConversation(null);
+        assert userService != null;
+        if (userService.findById(selectedItem.getId()) == null) {
+            openGroupConversation(null);
+        } else {
+            openConversation(null);
+        }
         sendMessageText.clear();
     }
 
@@ -223,6 +234,16 @@ public class MainController implements InitializableController {
         conversationsButton.setVisible(true);
         groupChatsButton.setVisible(true);
         openGroupChatCreationButton.setVisible(true);
+        conversationCloseButton.setVisible(true);
+        openGroupConversationButton.setVisible(true);
+
+        Map<String, String> columnsDescription = new LinkedHashMap<>();
+        //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
+        columnsDescription.put("Name", "userName");
+
+        buildTableColumns(columnsDescription);
+
+        setGroupChatsAsTableItems();
     }
 
     public void openGroupChatCreationPage(ActionEvent event) {
@@ -230,6 +251,7 @@ public class MainController implements InitializableController {
         conversationsButton.setVisible(true);
         groupChatsButton.setVisible(true);
         openGroupChatCreationButton.setVisible(true);
+        createGroupChatButton.setVisible(true);
         groupChatName.setVisible(true);
         Map<String, String> columnsDescription = new LinkedHashMap<>();
         //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
@@ -246,15 +268,63 @@ public class MainController implements InitializableController {
 
     }
 
+    public void openGroupConversation(ActionEvent event) {
+        UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
+        if (selectedItem != null) {
+            assert messageService != null;
+            assert userService != null;
+            assert groupChatService != null;
+            List<Message> messages = messageService.getMessagesByReceiverId(selectedItem.getId());
+            Map<Long, User> participants = groupChatService.getAllGroupChatParticipants(selectedItem.getId());
+
+            User loggedInUser = userService.findById(userId);
+            chatTextArea.getChildren().clear();
+            for (Message message : messages) {
+                Label currentLabel;
+                if (message.getSenderID().equals(loggedInUser.getId())) {
+                    currentLabel = new Label(loggedInUser.getUsername() + ": " + message.getMessage() + "\n");
+                    currentLabel.setAlignment(Pos.CENTER_RIGHT);
+
+                } else {
+                    User messageSender = participants.get(message.getSenderID());
+                    currentLabel = new Label(messageSender.getUsername() + ": " + message.getMessage() + "\n");
+                    currentLabel.setAlignment(Pos.CENTER_LEFT);
+                }
+                currentLabel.setStyle("-fx-pref-width:424px; ");
+                currentLabel.setWrapText(true);
+                chatTextArea.getChildren().add(currentLabel);
+            }
+            chatScrollPane.setVisible(true);
+            chatTextArea.setVisible(true);
+            sendMessageText.setVisible(true);
+            sendMessageText.clear();
+            sendMessageButton.setVisible(true);
+            tableView.setDisable(true);
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please make a selection!");
+            sendRequestNotifyMessageLabel.setVisible(true);
+        }
+    }
+
     public void createGroupChat(ActionEvent event) {
         String groupName = groupChatName.getText();
-        List<Long> groupParticipantIds = tableView.getSelectionModel().getSelectedItems()
-                .stream()
-                .map(UserTableItemWrapper::getId)
-                .collect(Collectors.toList());
-        groupParticipantIds.add(userId);
-        assert groupChatService != null;
-        groupChatService.createGroupChat(groupName, groupParticipantIds);
+        if (!groupName.isBlank()) {
+            List<Long> groupParticipantIds = tableView.getSelectionModel().getSelectedItems()
+                    .stream()
+                    .map(UserTableItemWrapper::getId)
+                    .collect(Collectors.toList());
+            if (!groupParticipantIds.isEmpty()) {
+                groupParticipantIds.add(userId);
+                assert groupChatService != null;
+                groupChatService.createGroupChat(groupName, groupParticipantIds);
+            } else {
+                sendRequestNotifyMessageLabel.setText("Please make a selection!");
+                sendRequestNotifyMessageLabel.setVisible(true);
+            }
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please enter a group name!");
+            sendRequestNotifyMessageLabel.setVisible(true);
+        }
     }
 
     public void showUsers(ActionEvent event) throws IOException {
@@ -264,7 +334,6 @@ public class MainController implements InitializableController {
         sentRequestsButton.setVisible(true);
         showFriendsButton1.setVisible(true);
         sendFriendRequestButton.setVisible(true);
-        sendRequestNotifyMessageLabel.setVisible(true);
 
         Map<String, String> columnsDescription = new LinkedHashMap<>();
         //The key must be the column Name and the value must be the attribute from the UserTableItemWrapper class
@@ -336,60 +405,59 @@ public class MainController implements InitializableController {
     }
 
     public void sendFriendRequest(ActionEvent event) {
+        sendRequestNotifyMessageLabel.setText("");
         UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-        User newFriend = userDatabaseRepository.findOneByUsername(selectedItem.getUserName());
-        if (checkExistingFriendRequest(newFriend.getUsername())) {
-            LocalDateTime now = LocalDateTime.now();
-            Timestamp date = Timestamp.valueOf(now);
-            Friendship newFriendRequest = new Friendship(userId, newFriend.getId(), date);
-            assert friendshipService != null;
-            newFriendRequest.setId(friendshipDatabaseRepository.generateNextID());
-            friendshipService.addToRepo(newFriendRequest);
-            sendRequestNotifyMessageLabel.setText("Friend request sent!");
+        if (selectedItem != null) {
+            User newFriend = userDatabaseRepository.findOneByUsername(selectedItem.getUserName());
+            if (checkExistingFriendRequest(newFriend.getUsername())) {
+                LocalDateTime now = LocalDateTime.now();
+                Timestamp date = Timestamp.valueOf(now);
+                Friendship newFriendRequest = new Friendship(userId, newFriend.getId(), date);
+                assert friendshipService != null;
+                newFriendRequest.setId(friendshipDatabaseRepository.generateNextID());
+                friendshipService.addToRepo(newFriendRequest);
+                sendRequestNotifyMessageLabel.setText("Friend request sent!");
+                sendRequestNotifyMessageLabel.setVisible(true);
+            }
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please make a selection!");
+            sendRequestNotifyMessageLabel.setVisible(true);
         }
     }
 
     public void handleDelete(ActionEvent event) {
         UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-        Friendship friendship = friendshipDatabaseRepository.findOneByUser(userDatabaseRepository.findOneByUsername(selectedItem.getUserName()).getId(), userId);
-        friendshipDatabaseRepository.delete(friendship.getId());
-        setFriendRequestAsTableItems();
+        if (selectedItem != null) {
+            Friendship friendship = friendshipDatabaseRepository.findOneByUser(userDatabaseRepository.findOneByUsername(selectedItem.getUserName()).getId(), userId);
+            friendshipDatabaseRepository.delete(friendship.getId());
+            setFriendRequestAsTableItems();
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please make a selection!");
+            sendRequestNotifyMessageLabel.setVisible(true);
+        }
     }
 
     public void handleAccept(ActionEvent event) {
         UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-        Friendship friendship = friendshipDatabaseRepository.findOneByUser(userDatabaseRepository.findOneByUsername(selectedItem.getUserName()).getId(), userId);
-        friendshipDatabaseRepository.update(friendship);
-        setFriendRequestAsTableItems();
+        if (selectedItem != null) {
+            Friendship friendship = friendshipDatabaseRepository.findOneByUser(userDatabaseRepository.findOneByUsername(selectedItem.getUserName()).getId(), userId);
+            friendshipDatabaseRepository.update(friendship);
+            setFriendRequestAsTableItems();
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please make a selection!");
+            sendRequestNotifyMessageLabel.setVisible(true);
+        }
     }
 
     public void handleCancelRequest(ActionEvent event) {
         UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-        Friendship friendship = friendshipDatabaseRepository.findOneByUser(userDatabaseRepository.findOneByUsername(selectedItem.getUserName()).getId(), userId);
-        friendshipDatabaseRepository.delete(friendship.getId());
-        setSentRequestAsTableItems();
-    }
-
-    public void handleChat(ActionEvent event) throws IOException {
-        // TODO
-        try {
-//            UserTableItemWrapper selectedItem = tableView.getSelectionModel().getSelectedItem();
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(ViewResolver.getView("chat-view.fxml"));
-
-            BorderPane root = loader.load();
-
-            Stage chatStage = new Stage();
-            chatStage.setTitle("Chat");
-            chatStage.initModality(Modality.NONE);
-
-            Scene scene = new Scene(root);
-            chatStage.setScene(scene);
-
-            chatStage.show();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (selectedItem!=null) {
+            Friendship friendship = friendshipDatabaseRepository.findOneByUser(userDatabaseRepository.findOneByUsername(selectedItem.getUserName()).getId(), userId);
+            friendshipDatabaseRepository.delete(friendship.getId());
+            setSentRequestAsTableItems();
+        } else {
+            sendRequestNotifyMessageLabel.setText("Please make a selection!");
+            sendRequestNotifyMessageLabel.setVisible(true);
         }
     }
 
@@ -461,7 +529,23 @@ public class MainController implements InitializableController {
         TABLE_ITEMS.setAll(items);
     }
 
+    private void setGroupChatsAsTableItems() {
+        assert groupChatService != null;
+        List<UserTableItemWrapper> items = groupChatService.getAllByUserId(userId)
+                .stream()
+                .map(groupChat -> {
+                    UserTableItemWrapper userTableItemWrapper = new UserTableItemWrapper();
+                    userTableItemWrapper.setId(groupChat.getId());
+                    userTableItemWrapper.setUserName(groupChat.getName());
+                    return userTableItemWrapper;
+                })
+                .collect(Collectors.toList());
+
+        TABLE_ITEMS.setAll(items);
+    }
+
     private void resetVisibility() {
+        openGroupConversationButton.setVisible(false);
         showFriendsButton1.setVisible(false);
         openGroupChatCreationButton.setVisible(false);
         createGroupChatButton.setVisible(false);
@@ -476,6 +560,7 @@ public class MainController implements InitializableController {
         addFriendsButton.setVisible(false);
         loggedInAsName.setVisible(false);
         logOutButton.setVisible(false);
+        welcomeImage.setVisible(false);
         declineButton.setVisible(false);
         loggedInAsUsernameLabel.setVisible(false);
         cancelRequestButton.setVisible(false);
@@ -490,6 +575,7 @@ public class MainController implements InitializableController {
         tableView.getSelectionModel().setSelectionMode(
                 SelectionMode.SINGLE
         );
+        tableView.setDisable(false);
     }
 
     private void buildTableColumns(Map<String, String> columnsDescription) {
@@ -499,7 +585,7 @@ public class MainController implements InitializableController {
             TableColumn<UserTableItemWrapper, String> newColumn = new TableColumn<>(entry.getKey());
             newColumn.setMinWidth(80);
             newColumn.setCellValueFactory(new PropertyValueFactory<>(entry.getValue()));
-
+            newColumn.setEditable(false);
             columns.add(newColumn);
         }
         if (!columns.isEmpty()) {
@@ -509,5 +595,4 @@ public class MainController implements InitializableController {
             tableView.setVisible(false);
         }
     }
-
 }

@@ -1,5 +1,8 @@
 package map.socialnetwork.views.wrapper;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 public class UserTableItemWrapper {
 
     private Long id;

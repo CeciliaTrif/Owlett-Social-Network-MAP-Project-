@@ -8,6 +8,7 @@ import map.socialnetwork.controller.InitializableController;
 import map.socialnetwork.views.ViewResolver;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Map;
 
 public class Main extends Application {

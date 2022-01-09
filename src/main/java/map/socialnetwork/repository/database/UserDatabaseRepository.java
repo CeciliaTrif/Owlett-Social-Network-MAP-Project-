@@ -1,8 +1,6 @@
 package map.socialnetwork.repository.database;
 
 
-
-import map.socialnetwork.domain.model.Friendship;
 import map.socialnetwork.domain.model.User;
 import map.socialnetwork.domain.validator.Validator;
 import map.socialnetwork.repository.Repository;
@@ -40,7 +38,7 @@ public class UserDatabaseRepository implements Repository<User, Long> {
             "FROM users";
 
     private static final String UPDATE_QUERY = "UPDATE users " +
-            "SET name=? " +
+            "SET username=? " +
             "WHERE id=?";
 
     private static final String GENERATE_ID_QUERY = "SELECT MAX(id) + 1 AS generated_id " +

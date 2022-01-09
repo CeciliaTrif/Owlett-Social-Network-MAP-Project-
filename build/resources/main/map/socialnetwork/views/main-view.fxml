@@ -44,7 +44,7 @@
                   <Font name="Lucida Console" size="18.0" />
                </font>
             </Label>
-            <Label fx:id="loggedInAsName" alignment="CENTER" layoutX="16.0" layoutY="337.0" prefWidth="200.0" textFill="#394f71">
+            <Label fx:id="loggedInAsName" alignment="CENTER" layoutY="337.0" prefHeight="20.0" prefWidth="232.0" textFill="#394f71">
                <font>
                   <Font name="Lucida Console" size="18.0" />
                </font>
@@ -59,7 +59,10 @@
             <Button fx:id="openGroupChatCreationButton" layoutX="26.0" layoutY="428.0" mnemonicParsing="false" onAction="#openGroupChatCreationPage" prefHeight="40.0" prefWidth="180.0" stylesheets="@../css/light.css" text="Create group chat" visible="false" />
          </AnchorPane>
          <AnchorPane layoutX="233.0" prefHeight="600.0" prefWidth="387.0" style="-fx-background-color: #ffffff;">
-            <TableView fx:id="tableView" layoutX="14.0" layoutY="26.0" prefHeight="267.0" prefWidth="355.0" stylesheets="@../css/table-style.css" visible="false">
+            <ImageView fx:id="welcomeImage" fitHeight="655.0" fitWidth="387.0" pickOnBounds="true" preserveRatio="true">
+               <Image url="@../pictures/welcome!.png" />
+            </ImageView>
+            <TableView fx:id="tableView" editable="true" layoutX="14.0" layoutY="26.0" prefHeight="267.0" prefWidth="355.0" stylesheets="@../css/table-style.css" visible="false">
 
             </TableView>
             <Button fx:id="acceptButton" layoutX="243.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleAccept" prefHeight="28.0" prefWidth="128.0" stylesheets="@../css/dark.css" text="Accept" visible="false" />
@@ -69,13 +72,9 @@
             <Button fx:id="cancelRequestButton" layoutX="243.0" layoutY="309.0" mnemonicParsing="false" onAction="#handleCancelRequest" prefHeight="28.0" prefWidth="128.0" stylesheets="@../css/dark.css" text="Cancel request" visible="false" />
             <Label fx:id="sendRequestNotifyMessageLabel" layoutX="22.0" layoutY="292.0" prefHeight="17.0" prefWidth="350.0" style="-fx-alignment: CENTER;" wrapText="true" />
             <AnchorPane layoutX="14.0" layoutY="348.0" prefHeight="202.0" prefWidth="359.0">
-               <children>
-                  <ScrollPane fx:id="chatScrollPane" stylesheets="@../css/vbox-grey.css" visible="false">
-                     <content>
-                        <VBox fx:id="chatTextArea" prefHeight="200.0" prefWidth="355.0" stylesheets="@../css/vbox-grey.css" />
-                     </content>
-                  </ScrollPane>
-               </children>
+               <ScrollPane fx:id="chatScrollPane" stylesheets="@../css/vbox-grey.css" visible="false">
+                  <VBox fx:id="chatTextArea" prefHeight="200.0" prefWidth="340.0" stylesheets="@../css/vbox-grey.css" />
+               </ScrollPane>
             </AnchorPane>
             <Button fx:id="sendMessageButton" layoutX="325.0" layoutY="557.0" mnemonicParsing="false" onAction="#sendMessage" prefHeight="28.0" prefWidth="48.0" stylesheets="@../css/dark.css" text="Send" visible="false" />
             <Button fx:id="conversationOpenButton" layoutX="231.0" layoutY="309.0" mnemonicParsing="false" onAction="#openConversation" prefHeight="28.0" prefWidth="140.0" stylesheets="@../css/dark.css" text="Show Conversation" visible="false" />
@@ -83,6 +82,7 @@
             <TextField fx:id="sendMessageText" layoutX="14.0" layoutY="557.0" prefHeight="27.0" prefWidth="311.0" stylesheets="@../css/text-field-grey.css" visible="false" />
             <TextField fx:id="groupChatName" layoutX="22.0" layoutY="309.0" prefHeight="29.0" prefWidth="205.0" promptText="Group Name" stylesheets="@../css/text-field-grey.css" visible="false" />
             <Button fx:id="createGroupChatButton" layoutX="236.0" layoutY="309.0" mnemonicParsing="false" onAction="#createGroupChat" prefHeight="28.0" prefWidth="136.0" stylesheets="@../css/dark.css" text="Create Group Chat" visible="false" />
+            <Button fx:id="openGroupConversationButton" layoutX="231.0" layoutY="309.0" mnemonicParsing="false" onAction="#openGroupConversation" prefHeight="28.0" prefWidth="140.0" stylesheets="@../css/dark.css" text="Show Conversation" visible="false" />
          </AnchorPane>
       </AnchorPane>
    </center>

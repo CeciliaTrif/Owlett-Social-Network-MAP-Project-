@@ -43,10 +43,7 @@ public class FriendshipService extends map.socialnetwork.service.BaseService<Fri
 
     public Friendship delete(Friendship f) {
         Friendship friendship = getRepository().delete(f.getId());
-        if(friendship!=null) {
-            return null;
-        }
-        return friendship;
+        return null;
     }
 
     public List<Friendship> getAllByUserId(Long userId) {

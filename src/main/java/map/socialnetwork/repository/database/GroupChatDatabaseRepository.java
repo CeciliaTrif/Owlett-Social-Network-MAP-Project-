@@ -38,6 +38,18 @@ public class GroupChatDatabaseRepository implements Repository<GroupChat, Long> 
     private static final String INSERT_INTO_XREF_TABLE = "INSERT INTO group_chats_users_xref(user_id, group_chat_id) " +
             "VALUES(?, ?) ";
 
+    private static final String GET_ALL_BY_USER_ID = "SELECT * " +
+            "FROM group_chats gc " +
+            "JOIN group_chats_users_xref gcux ON gc.id = gcux.group_chat_id " +
+            "WHERE gcux.user_id = ? ";
+
+    private static final String GET_ALL_PARTICIPANT_IDS_BY_GROUP_CHAT = "SELECT gcux.user_id AS id " +
+            "FROM group_chats gc " +
+            "JOIN group_chats_users_xref gcux ON gc.id = gcux.group_chat_id " +
+            "WHERE gc.id = ? ";
+
+
+
     @Override
     public GroupChat findOne(Long id) {
         if (id == null) {
@@ -160,6 +172,41 @@ public class GroupChatDatabaseRepository implements Repository<GroupChat, Long> 
         }
     }
 
+    public List<GroupChat> getAllByUserId(Long userId) {
+        List<GroupChat> groupChats = new ArrayList<>();
+        try {
+            Connection connection = ConnectionFactory.getDatabaseConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL_BY_USER_ID);
+            preparedStatement.setLong(1, userId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                groupChats.add(extractGroupChatFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return groupChats;
+    }
+
+    public List<Long> getAllParticipantIds(Long id) {
+        List<Long> participantsIds = new ArrayList<>();
+        try {
+            Connection connection = ConnectionFactory.getDatabaseConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL_PARTICIPANT_IDS_BY_GROUP_CHAT);
+            preparedStatement.setLong(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                participantsIds.add(resultSet.getLong("id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return participantsIds;
+
+    }
+
     @Override
     public int getSize() {
         return 0;
@@ -170,4 +217,6 @@ public class GroupChatDatabaseRepository implements Repository<GroupChat, Long> 
         groupChat.setId(resultSet.getLong("id"));
         return groupChat;
     }
+
+
 }
